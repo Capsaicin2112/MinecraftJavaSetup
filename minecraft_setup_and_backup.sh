@@ -1,20 +1,20 @@
 #!/bin/bash
 
-sftp_username=
-sftp_password=
-sftp_host=
-sftp_dest_dir=
-
-
 # 0) Save the hostname of the server to a variable
 hostname=$(hostname)
 echo "Hostname: $hostname"
+
+# Define variables to be passed to the backup script
+backup_dir="/root/backups"
+sftp_password="{FILL IN}"
+sftp_user="{FILL IN}"
+sftp_host="{FILL IN}"
+sftp_path="/{FILL IN}/$hostname"
 
 # 1) Install required packages
 apt update && apt install -y curl screen zip sshpass
 
 # 2) Create /root/backups folder if it doesn't exist
-backup_dir="/root/backups"
 if [ ! -d "$backup_dir" ]; then
   mkdir -p "$backup_dir"
   echo "Backup directory created: $backup_dir"
@@ -24,31 +24,30 @@ fi
 
 # 3) Create the run_backup.sh script
 backup_script="/root/run_backup.sh"
-cat << 'EOF' > "$backup_script"
+cat << EOF > "$backup_script"
 #!/bin/bash
 
-# Define variables
-backup_dir="/root/backups"
-hostname=$(hostname)
-backupfilename="$backup_dir/$(date +%Y.%m.%d.%H.%M.%S).tar.gz"
+# Variables passed from the parent script
+backup_dir="$backup_dir"
+hostname="$hostname"
 sftp_password="$sftp_password"
-sftp_username="$sftp_username"
+sftp_user="$sftp_user"
 sftp_host="$sftp_host"
-sftp_dest_dir="$sftp_dest_dir"
+sftp_path="$sftp_path"
 
 # Create a tarball of the "world" directory
-tar -pzvcf "$backupfilename" world
+backupfilename="\$backup_dir/\$(date +%Y.%m.%d.%H.%M.%S).tar.gz"
+tar -pzvcf "\$backupfilename" world
 
 # Transfer backup to SFTP site
-sshpass -p "\$sftp_password" sftp \$sftp_username@\$sftp_host:\$sftp_dest_dir/$hostname <<< $'put '$backupfilename''
+sshpass -p "\$sftp_password" sftp \$sftp_user@\$sftp_host:\$sftp_path <<< \$'put '\$backupfilename''
 
 # Keep only the latest 3 backup files
-ls -tp "$backup_dir" | grep -v '/$' | tail -n +4 | xargs -I {} rm -- "$backup_dir/{}"
+ls -tp "\$backup_dir" | grep -v '/\$' | tail -n +4 | xargs -I {} rm -- "\$backup_dir/{}"
 EOF
 
 chmod 744 "$backup_script"
 echo "Backup script created: $backup_script"
-
 
 # 4) Update crontab to run the backup script at 4am every day
 cron_job="0 4 * * * $backup_script"
