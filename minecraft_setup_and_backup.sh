@@ -31,10 +31,10 @@ cat << 'EOF' > "$backup_script"
 backup_dir="/root/backups"
 hostname=$(hostname)
 backupfilename="$backup_dir/$(date +%Y.%m.%d.%H.%M.%S).tar.gz"
-sftp_password=$sftp_password
-sftp_username=$sftp_username
-sftp_host=$sftp_host
-sftp_dest_dir=$sftp_dest_dir
+sftp_password="$sftp_password"
+sftp_username="$sftp_username"
+sftp_host="$sftp_host"
+sftp_dest_dir="$sftp_dest_dir"
 
 # Create a tarball of the "world" directory
 tar -pzvcf "$backupfilename" world
