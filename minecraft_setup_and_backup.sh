@@ -40,7 +40,7 @@ sftp_dest_dir="$sftp_dest_dir"
 tar -pzvcf "$backupfilename" world
 
 # Transfer backup to SFTP site
-sshpass -p "$sftp_password" sftp $sftp_username@$sftp_host:/$sftp_dest_dir/$hostname <<< $'put '$backupfilename''
+sshpass -p "\$sftp_password" sftp \$sftp_username@\$sftp_host:\$sftp_dest_dir/$hostname <<< $'put '$backupfilename''
 
 # Keep only the latest 3 backup files
 ls -tp "$backup_dir" | grep -v '/$' | tail -n +4 | xargs -I {} rm -- "$backup_dir/{}"
